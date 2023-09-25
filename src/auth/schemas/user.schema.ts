@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Post } from 'src/posts/schemas/posts.schema';
-
 @Schema({ timestamps: true })
 export class User extends Document {
   @Prop()
