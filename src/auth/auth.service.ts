@@ -6,6 +6,7 @@ import * as bcrypt from 'bcryptjs';
 import { SignUpDto } from './dto/signup.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
+import { generateRandomPassword } from './utils/generatepass';
 
 @Injectable()
 export class AuthService {
@@ -48,5 +49,30 @@ export class AuthService {
   }
   async getUserById(id: string) {
     return await this.userModel.findById(id);
+  }
+  async validateGoogleUser(profile: any) {
+    const existingUser = await this.userModel.findOne({
+      email: profile.emails[0].value,
+    });
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const newUser = new this.userModel({
+      name: profile.displayName,
+      email: profile.emails[0].value,
+      password: generateRandomPassword(6),
+    });
+
+    // Save the new user to the database
+    await newUser.save();
+
+    return newUser;
+  }
+  async googleLogin(user: User) {
+    const token = this.jwtService.sign({ id: user._id });
+    console.log(user);
+    return { token };
   }
 }

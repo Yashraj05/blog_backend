@@ -50,9 +50,19 @@ export class PostsController {
     return this.postService.deleteById(id, req.user);
   }
   @Get(':id')
-  @UseGuards(AuthGuard())
-  @UseInterceptors(FileInterceptor('file'))
+  // @UseGuards(AuthGuard())
+  // @UseInterceptors(FileInterceptor('file'))
   async getPost(@Param('id') id: string) {
     return this.postService.findById(id);
+  }
+  @Get()
+  async getAllPosts() {
+    return this.postService.getAllPosts();
+  }
+  @Post('/upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    console.log(file);
+    return this.postService.uploadImage(file);
   }
 }
