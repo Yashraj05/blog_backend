@@ -14,7 +14,7 @@ import { diskStorage } from 'multer';
     MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
     MulterModule.register({
       storage: diskStorage({
-        destination: '/home/my/Desktop/blog_website/uploads',
+        destination: 'uploads',
         filename(req, file, callback) {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
