@@ -38,10 +38,10 @@ export class AuthController {
   //   console.log(userDto);
   //   return userDto;
   // }
-  @Get()
-  async test() {
-    return `<button><a href='/auth/google'>Login With Google</a></button>`;
-  }
+  // @Get()
+  // async test() {
+  //   return `<button><a href='/auth/google'>Login With Google</a></button>`;
+  // }
   @Get('/google')
   @UseGuards(AuthGuard('google'))
   async googleLogin() {}

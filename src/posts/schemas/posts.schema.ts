@@ -12,9 +12,9 @@ export class Post extends Document {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   user: User;
   @Prop()
-  imageUrl: string;
+  Url: string;
   @Prop()
-  imageCloudinaryId: string;
+  CloudinaryId: string;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

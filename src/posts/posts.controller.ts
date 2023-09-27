@@ -63,6 +63,6 @@ export class PostsController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     console.log(file);
-    return this.postService.uploadImage(file);
+    return this.postService.uploadFile(file);
   }
 }

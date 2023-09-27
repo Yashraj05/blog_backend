@@ -11,7 +11,6 @@ import {
   v2,
 } from 'cloudinary';
 import { CreatePostDto } from './dto/createPost.dto';
-const toStream = require('buffer-to-stream');
 @Injectable()
 export class PostsService {
   constructor(@InjectModel(Post.name) private postModel: mongoose.Model<Post>) {
@@ -24,13 +23,13 @@ export class PostsService {
 
   async createPost(file: Express.Multer.File, post: CreatePostDto, user: User) {
     console.log(file);
-    const result = await cloudinary.uploader.upload(file.path);
+    const result = await this.uploadFile(file);
     const data = Object.assign(
       post,
       { user: user._id },
-      { imageUrl: result.secure_url },
+      { Url: result.secure_url },
       {
-        imageCloudinaryId: result.public_id,
+        CloudinaryId: result.public_id,
       },
     );
     const newPost = await this.postModel.create(data);
@@ -57,11 +56,9 @@ export class PostsService {
       if (image.user.toString() !== user._id.toString()) {
         return 'not authrorized to update';
       }
-      await cloudinary.uploader.destroy(image.imageCloudinaryId);
+      await cloudinary.uploader.destroy(image.CloudinaryId);
 
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: 'blogs',
-      });
+      const result = await this.uploadFile(file);
       const updatedData = {
         title: post.title,
         content: post.content,
@@ -88,7 +85,7 @@ export class PostsService {
       user.posts = user.posts.filter((postId) => postId.toString() !== id);
       await user.save();
       const post = await this.postModel.findByIdAndDelete(id);
-      await cloudinary.uploader.destroy(post.imageCloudinaryId);
+      await cloudinary.uploader.destroy(post.CloudinaryId);
       return post;
     } catch (error) {
       return 'error in deleting the post';
@@ -114,30 +111,30 @@ export class PostsService {
 
   uploadImage(file: Express.Multer.File): Promise<UploadApiResponse> {
     return new Promise((resolve, reject) => {
-      const upload = v2.uploader.upload_stream((error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      });
-      toStream(file.buffer).pipe(upload);
-    });
-  }
-
-  uploadVideo(file: Express.Multer.File): Promise<UploadApiResponse> {
-    return new Promise((resolve, reject) => {
-      // Configure Cloudinary upload options for videos as needed
-      const videoUploadOptions = {
-        resource_type: 'video' as const,
-        // Add any specific video upload options here
-      };
-
-      const upload = v2.uploader.upload_stream(
-        videoUploadOptions,
-        (error, result) => {
+      v2.uploader
+        .upload_stream((error, result) => {
           if (error) return reject(error);
           resolve(result);
-        },
-      );
-      toStream(file.buffer).pipe(upload);
+        })
+        .end(file.buffer);
+    });
+  }
+  async uploadVideo(file: Express.Multer.File): Promise<UploadApiResponse> {
+    return new Promise((resolve, reject) => {
+      v2.uploader
+        .upload_stream(
+          {
+            resource_type: 'video',
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          },
+        )
+        .end(file.buffer);
     });
   }
 }

@@ -7,7 +7,6 @@ import { SignUpDto } from './dto/signup.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { generateRandomPassword } from './utils/generatepass';
-
 @Injectable()
 export class AuthService {
   constructor(
