@@ -1,5 +1,6 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   // ClassSerializerInterceptor,
   Controller,
   Get,
@@ -7,6 +8,7 @@ import {
   Post,
   Req,
   UseGuards,
+  UseInterceptors,
   // UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -14,6 +16,8 @@ import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 // import { UserDto } from './dto/user.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { User } from './schemas/user.schema';
+import { UserDto } from './dto/user.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -22,9 +26,17 @@ export class AuthController {
   signUp(@Body() signUpDto: SignUpDto): Promise<{ token: string }> {
     return this.authService.signUp(signUpDto);
   }
-  @Get('/login')
-  login(@Body() loginDto: LoginDto): Promise<{ token: string }> {
-    return this.authService.login(loginDto);
+  @UseInterceptors(ClassSerializerInterceptor)
+  @Post('/login')
+  async login(@Body() loginDto: LoginDto) {
+    const { token, user } = await this.authService.login(loginDto);
+    const userDto = new UserDto();
+    userDto.name = user.name;
+    userDto.email = user.email;
+    userDto.password = user.password;
+    userDto.posts = user.posts;
+
+    return { token, userDto };
   }
   // @UseInterceptors(ClassSerializerInterceptor)
   // @Get(':id')

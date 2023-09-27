@@ -4,8 +4,8 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
-  Put,
   Req,
   UploadedFile,
   UseGuards,
@@ -16,6 +16,7 @@ import { Express } from 'express';
 import { CreatePostDto } from './dto/createPost.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { PostsService } from './posts.service';
+import { UpdatePostDto } from './dto/updatePost.dto';
 
 // import cloudinary from './utils/cloudinary.config';
 
@@ -32,16 +33,16 @@ export class PostsController {
   ) {
     return this.postService.createPost(file, createPostDto, req.user);
   }
-  @Put(':id')
+  @Patch(':id')
   @UseGuards(AuthGuard())
   @UseInterceptors(FileInterceptor('file'))
   async updatePost(
     @UploadedFile() file: Express.Multer.File,
-    @Body() createPostDto: CreatePostDto,
+    @Body() updatePostDto: UpdatePostDto,
     @Param('id') id: string,
     @Req() req,
   ) {
-    return this.postService.updateById(id, file, createPostDto, req.user);
+    return this.postService.updateById(id, file, updatePostDto, req.user);
   }
   @Delete(':id')
   @UseGuards(AuthGuard())

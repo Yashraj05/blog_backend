@@ -11,6 +11,7 @@ import {
   v2,
 } from 'cloudinary';
 import { CreatePostDto } from './dto/createPost.dto';
+import { UpdatePostDto } from './dto/updatePost.dto';
 @Injectable()
 export class PostsService {
   constructor(@InjectModel(Post.name) private postModel: mongoose.Model<Post>) {
@@ -43,30 +44,35 @@ export class PostsService {
   async updateById(
     id: string,
     file: Express.Multer.File,
-    post: CreatePostDto,
+    post: UpdatePostDto,
     user: User,
   ) {
     try {
-      const image = await this.postModel.findById(id);
-      if (!image) {
+      const blog = await this.postModel.findById(id);
+      if (!post) {
         throw new Error(`Book with ID ${id} not found.`);
       }
-      console.log(image.user.toString());
+      console.log(blog.user.toString());
       console.log(user._id.toString());
-      if (image.user.toString() !== user._id.toString()) {
+      if (blog.user.toString() !== user._id.toString()) {
         return 'not authrorized to update';
       }
-      await cloudinary.uploader.destroy(image.CloudinaryId);
+      const updatedData: any = {};
 
-      const result = await this.uploadFile(file);
-      const updatedData = {
-        title: post.title,
-        content: post.content,
-        imageUrl: result.secure_url,
-        imageCloudinaryId: result.public_id,
-      };
+      if (post.title) {
+        updatedData.title = post.title;
+      }
 
-      // Update the post in the database using updateOne
+      if (post.content) {
+        updatedData.content = post.content;
+      }
+
+      if (file) {
+        await cloudinary.uploader.destroy(blog.CloudinaryId);
+        const uploadResult = await this.uploadFile(file);
+        updatedData.imageUrl = uploadResult.secure_url;
+        updatedData.imageCloudinaryId = uploadResult.public_id;
+      }
       return await this.postModel.updateOne({ _id: id }, updatedData);
     } catch (error) {
       console.error(`Error updating book: ${error.message}`);
