@@ -16,7 +16,6 @@ import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 // import { UserDto } from './dto/user.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from './schemas/user.schema';
 import { UserDto } from './dto/user.dto';
 @Controller('auth')
 export class AuthController {
@@ -60,8 +59,16 @@ export class AuthController {
 
   @Get('/google/callback')
   @UseGuards(AuthGuard('google'))
+  @UseInterceptors(ClassSerializerInterceptor)
   async googleLoginCallback(@Req() req) {
-    const user = req.user;
-    return this.authService.googleLogin(user);
+    const newuser = req.user;
+    const { token, user } = await this.authService.googleLogin(newuser);
+    const userDto = new UserDto();
+    userDto.name = user.name;
+    userDto.email = user.email;
+    userDto.password = user.password;
+    userDto.posts = user.posts;
+
+    return { token, userDto };
   }
 }

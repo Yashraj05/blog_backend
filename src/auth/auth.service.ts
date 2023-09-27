@@ -72,6 +72,6 @@ export class AuthService {
   async googleLogin(user: User) {
     const token = this.jwtService.sign({ id: user._id });
     console.log(user);
-    return { token };
+    return { token, user };
   }
 }
