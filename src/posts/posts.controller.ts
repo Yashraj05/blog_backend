@@ -17,6 +17,8 @@ import { CreatePostDto } from './dto/createPost.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { PostsService } from './posts.service';
 import { UpdatePostDto } from './dto/updatePost.dto';
+import { SchedulePostDto } from './dto/schedulePost.dto';
+import { Cron } from '@nestjs/schedule';
 
 // import cloudinary from './utils/cloudinary.config';
 
@@ -66,4 +68,9 @@ export class PostsController {
     console.log(file);
     return this.postService.uploadFile(file);
   }
+  // @Post('/schedule')
+  // @Cron('* * * * *')
+  // async newPostSchedule(@Body() schedulePostDto: SchedulePostDto) {
+  //   return this.postService.schedulePost(schedulePostDto.date);
+  // }
 }

@@ -15,6 +15,11 @@ export class Post extends Document {
   Url: string;
   @Prop()
   CloudinaryId: string;
+  @Prop({ type: Date, default: null }) // Add the scheduledTime field
+  scheduledTime: Date;
+
+  @Prop({ type: Boolean, default: false }) // Add the isVisible field with default false
+  isVisible: boolean;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

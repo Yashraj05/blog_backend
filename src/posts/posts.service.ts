@@ -12,18 +12,38 @@ import {
 } from 'cloudinary';
 import { CreatePostDto } from './dto/createPost.dto';
 import { UpdatePostDto } from './dto/updatePost.dto';
+import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
+import * as schedule from 'node-schedule';
+import * as cron from 'node-cron';
+
 @Injectable()
 export class PostsService {
-  constructor(@InjectModel(Post.name) private postModel: mongoose.Model<Post>) {
+  constructor(
+    @InjectModel(Post.name) private postModel: mongoose.Model<Post>,
+    private schedulerRegistry: SchedulerRegistry,
+  ) {
     cloudinary.config({
       cloud_name: process.env.CLOUD_NAME,
       api_key: process.env.API_KEY,
       api_secret: process.env.API_SECRET,
     });
+    // cron.schedule('* * * * *', this.checkAndMarkPostsAsPublished.bind(this));
   }
 
   async createPost(file: Express.Multer.File, post: CreatePostDto, user: User) {
-    console.log(file);
+    const [month, day, year] = post.date.split('-');
+    const [hour, minute] = post.time.split(':');
+
+    // Create a Date object using the parsed values
+    const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(
+      2,
+      '0',
+    )}`;
+    const formattedTime = `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
+
+    // Create a Date object using the reformatted values
+    const scheduledTime = new Date(`${formattedDate}T${formattedTime}:00.000Z`);
+
     const result = await this.uploadFile(file);
     const data = Object.assign(
       post,
@@ -31,6 +51,9 @@ export class PostsService {
       { Url: result.secure_url },
       {
         CloudinaryId: result.public_id,
+      },
+      {
+        scheduledTime: scheduledTime,
       },
     );
     const newPost = await this.postModel.create(data);
@@ -98,7 +121,7 @@ export class PostsService {
     }
   }
   async getAllPosts() {
-    const posts = await this.postModel.find();
+    const posts = await this.postModel.find({ isVisible: true });
     return posts;
   }
   async uploadFile(
@@ -142,5 +165,17 @@ export class PostsService {
         )
         .end(file.buffer);
     });
+  }
+  @Cron(CronExpression.EVERY_SECOND)
+  async checkAndMarkPostsAsPublished() {
+    const now = new Date();
+    console.log(`running crone at ${now}`);
+    await this.postModel.updateMany(
+      {
+        scheduledTime: { $lte: now },
+        isVisible: false,
+      },
+      { $set: { isVisible: true } },
+    );
   }
 }

@@ -7,4 +7,8 @@ export class CreatePostDto {
   @IsNotEmpty()
   @IsString()
   content: string;
+  @IsNotEmpty()
+  date: string;
+  @IsNotEmpty()
+  time: string;
 }
